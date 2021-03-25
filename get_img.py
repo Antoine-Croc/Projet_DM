@@ -1,4 +1,6 @@
 import requests as re
+import random as rd
+import os
 from bs4 import BeautifulSoup as bs
 
 
@@ -30,11 +32,10 @@ def get_n_pics(n):
         for img in soup.find_all("img"):
             if img.get("height") and img.get("width"):
                 tags=get_tags("https://www.4freephotos.com/" + img.find_parent("a")["href"])
-                print("https://www.4freephotos.com/" + img.find_parent("a")["href"])
+                #print("https://www.4freephotos.com/" + img.find_parent("a")["href"])
                 #img_list2.append(img) #<-- list of tags
                 img_list.append(jsonify(img,tags)) # list of jsonified_tags
     img_list = img_list[:n]
-    print (img_list)
     return img_list
 
 
@@ -45,6 +46,10 @@ def jsonify(tag,keywords):
     jsonified_tag["height"] = tag["height"]
     jsonified_tag["width"] = tag["width"]
     jsonified_tag["title"] = tag["alt"]
+    if tag["height"] > tag["width"]:
+        jsonified_tag["orientation"] = "portrait"
+    else:
+        jsonified_tag["orientation"] = "landscape"
     jsonified_tag["keywords"] = keywords
     return jsonified_tag
 
@@ -53,6 +58,19 @@ def download_to_path(path, url, name):
     with open(path + "/" + name, "wb") as writer: 
             writer.write(r.content)
 
-img_list = get_n_pics(20)
-for count, img in enumerate(img_list):
-    download_to_path(img_folder_path, img["jpglink"], "pic_number_{count}.jpg".format(count=count))
+
+
+img_list = get_n_pics(100)
+for img in img_list:
+    img_title="{title}.jpg".format(title=img["title"].replace(" ", "_"))
+    if os.path.isfile("image_tests/{img_title}".format(img_title=img_title))==False:
+        download_to_path(img_folder_path, img["jpglink"], img_title)
+    else:
+        print("ok")
+
+def random_sample(n, imglist):
+    user_list = rd.sample(imglist,n)
+    return user_list
+    
+user_choice = random_sample(15,img_list)
+
