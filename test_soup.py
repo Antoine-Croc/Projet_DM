@@ -1,10 +1,10 @@
 import requests as re
 from bs4 import BeautifulSoup as bs
 
-url = "https://www.4freephotos.com/"
+url = "https://www.4freephotos.com/Gibraltar-rock-fortress-7201.html"
 req = re.get(url)
 soup = bs(req.text, "html.parser")
-print(soup)
+print(soup.prettify)
 
 
 #linklist = []

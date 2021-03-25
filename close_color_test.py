@@ -44,8 +44,6 @@ print(to_test)
         
 
 
-
-
 def closest(colors_table,color):
     colors_table = np.array(colors_table)
     color = np.array(color)
