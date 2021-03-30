@@ -1,16 +1,14 @@
 import requests as re
 import random as rd
 import os
-from bs4 import BeautifulSoup as bs
-
-# import time
 from PIL import Image
 import numpy as np
 import math
 import matplotlib.pyplot as plot
-import colr
+from bs4 import BeautifulSoup as bs
 from sklearn.cluster import KMeans
 from test_values import IMGS as img_list
+from colors import full_colors, print_colors
 
 
 img_folder_path = "downloads"
@@ -64,13 +62,13 @@ def jsonify(tag, keywords):  # créer liste sous format json
         jsonified_tag["orientation"] = "portrait"
     else:
         jsonified_tag["orientation"] = "landscape"
-
-    jsonified_tag["size"] = size(tag["width"])
+    jsonified_tag["size"] = pic_size(tag["width"])
     jsonified_tag["keywords"] = keywords
     return jsonified_tag
 
 
-def size(width):
+def pic_size(width):
+    width = int(width)
     if width < 400:
         return "Small"
     elif width < 500:
@@ -89,22 +87,6 @@ def download_to_path(path, url, name):
 
 # ------------------------------------------------------ recup couleurs
 
-basic_colors = {
-    "white": [255, 255, 255],
-    "black": [0, 0, 0],
-    "red": [255, 0, 0],
-    "green": [0, 255, 0],
-    "blue": [0, 0, 255],
-    "yellow": [255, 255, 0],
-    "cyan": [0, 255, 255],
-    "magenta": [255, 0, 255],
-    "gray": [128, 128, 128],
-    "orange": [255, 128, 0],
-    "purple": [128, 0, 255],
-    "pink": [255, 0, 128],
-    "brown": [165, 42, 42],
-}
-
 
 def add_to_list(rgb_list, tint):
     output = []
@@ -117,25 +99,16 @@ def add_to_list(rgb_list, tint):
     return output
 
 
-new_colors = {"white": [255, 255, 255], "black": [0, 0, 0]}
-
-for color in basic_colors.keys():
-    if color not in ["black", "white", "gray"]:
-        new_colors["light " + color] = add_to_list(basic_colors[color], "light")
-        new_colors[color] = basic_colors[color]
-        new_colors["dark " + color] = add_to_list(basic_colors[color], "dark")
-# print(new_colors)
-Colors_rgb = list(new_colors.values())
-Color_names = list(new_colors.keys())
-
-# for color,value in new_colors.items():
-#  print (colr.color(f"   {color}", back=value))
+# print_colors(full_colors)
 # Décommenter pour observer la palette de couleurs de la table
 
 # ----------------- Fin creation table de couleurs
 
 
 def get_colors(link, nb_cluster):
+    Colors_rgb = list(full_colors.values())
+    Color_names = list(full_colors.keys())
+
     imgfile = Image.open(f"{img_folder_path}/{link}")
     numarray = np.array(imgfile.getdata(), np.uint8)
     # print(numarray)
@@ -173,7 +146,7 @@ def get_colors(link, nb_cluster):
                 tmp_clr = stand_col
                 tmp_dist = math.dist(i, stand_col)
         name_list.append(Color_names[Colors_rgb.index(tmp_clr)])
-    return set(name_list)  # set permet d'enlever les doublons
+    return list(set(name_list))  # set permet d'enlever les doublons
 
 
 # ------------------------------Déroulement code
@@ -204,12 +177,5 @@ def random_sample(imglist):
         user["liked"] = int(rd.random() * 2)
     return user_list
 
-
-w = set()
-for i in img_list:
-    a = i["height"]
-    b = i["width"]
-    w.add(b)
-    print("Pic is", a, "x", b, " px")
 
 user_choice = random_sample(img_list)

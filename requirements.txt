@@ -1,0 +1,10 @@
+requests
+beautifulsoup4
+pillow
+matplotlib
+sklearn
+colr
+pandas
+IPython
+pydotplus
+graphviz
