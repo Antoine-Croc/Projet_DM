@@ -51,57 +51,33 @@ for key in ["colors", "height", "width", "orientation", "keywords"]:
         exploded_df[key][key] = labels[key].transform(exploded_df[key][key])
     else:
         others_df = drop_all_except(choice_df, [*other_keys, "liked"])
-        choice_df[key] = labels[key].transform(others_df[key])
+        others_df[key] = labels[key].transform(others_df[key])
 
 
 trees = {}
 for key in exploded_keys:
     trees[key] = tree.DecisionTreeClassifier()
-    trees[key].fit(exploded_df[key][key], exploded_df[key]["liked"])
+    trees[key].fit(
+        exploded_df[key][key].to_frame(), exploded_df[key]["liked"].to_frame()
+    )
 
 trees["others"] = tree.DecisionTreeClassifier()
-trees["others"].fit(others_df[other_keys], others_df["liked"])
+trees["others"].fit(others_df[other_keys], others_df["liked"].to_frame())
 
 
-# def is_image_favorite(img, labels=labels, trees=trees):
-#
+def is_image_favorite(img, labels=labels, trees=trees):
+    img_df = pd.DataFrame(img)
+    other_df = drop_all_except(img_df, other_keys)
+    for key in other_keys:
+        other_df[key] = labels[key].transform(other_df[key])
+    other_prediction = trees["others"].predict(other_df)
 
-exit()
-# creating dataframes
-dataframe = pd.DataFrame(data, columns=["colors", "tag", "size", "mode"])
-resultframe = pd.DataFrame(result, columns=["favorite"])
+    exploded_preds = {}
+    for key in exploded_keys:
+        exploded_df = drop_all_except(img_df, [key]).explode(key)
+        exploded_df = labels[key].transform(exploded_df)
+        exploded_preds[key] = trees[key].predict(exploded_df.to_frame())
 
-# generating numerical labels
-color_label = LabelEncoder()
-color_label.fit(color_names)
-dataframe["colors"] = le1.fit_transform(dataframe["colors"])
-
-le2 = LabelEncoder()
-dataframe["tag"] = le2.fit_transform(dataframe["tag"])
-
-le3 = LabelEncoder()
-dataframe["size"] = le3.fit_transform(dataframe["size"])
-
-le4 = LabelEncoder()
-dataframe["mode"] = le4.fit_transform(dataframe["mode"])
-
-le5 = LabelEncoder()
-resultframe["favorite"] = le5.fit_transform(resultframe["favorite"])
-
-# Use of decision tree classifiers
-dtc = tree.DecisionTreeClassifier()
-dtc = dtc.fit(dataframe, resultframe)
-
-# prediction
-prediction = dtc.predict(
-    [
-        [
-            le1.transform(["red"])[0],
-            le2.transform(["nature"])[0],
-            le3.transform(["thumbnail"])[0],
-            le4.transform(["portrait"])[0],
-        ]
-    ]
-)
-print(le5.inverse_transform(prediction))
-print(dtc.feature_importances_)
+    print("others: ", other_prediction)
+    for key, pred in exploded_preds.items():
+        print(f"{key}: {pred}")
