@@ -2,7 +2,7 @@ import requests as re
 import random as rd
 import os
 from bs4 import BeautifulSoup as bs
-
+import time
 from PIL import Image
 import numpy as np
 import math
@@ -118,7 +118,10 @@ def get_colors(link,nb_cluster):
     numarray = np.array(imgfile.getdata(), np.uint8)
     #print(numarray)
     clusters = KMeans(n_clusters = nb_cluster)
+    start = time.time()
     clusters.fit(numarray)
+    finish = time.time()
+    print(finish-start)
     npbins = np.arange(0, nb_cluster+1)
     histogram = np.histogram(clusters.labels_, bins=npbins)
     labels = np.unique(clusters.labels_)
@@ -152,7 +155,7 @@ def get_colors(link,nb_cluster):
 
 #------------------------------Déroulement code
 
-img_list = get_n_pics(15)
+img_list = get_n_pics(10)
 image_num=0
 for img in img_list:
     img_title="{title}.jpg".format(title=img["title"])
