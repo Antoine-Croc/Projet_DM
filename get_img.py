@@ -2,25 +2,25 @@ import requests as re
 import random as rd
 import os
 from bs4 import BeautifulSoup as bs
-import time
+#import time
 from PIL import Image
 import numpy as np
 import math
 import matplotlib.pyplot as plot
 import colr
 from sklearn.cluster import KMeans
+#from test_values import IMGS as img_list
 
 
 
-
-img_folder_path = "/home/antoine/Documents/Projet_DM/image_tests" 
+img_folder_path = "downloads" 
 url = "https://www.4freephotos.com/"
 # print(soup.prettify()) pour voir tout le code html 'proprement'
 
 
 def get_page(page_num):
-    page_url = "https://www.4freephotos.com/photos.php?&page={page_n}&order=latest"
-    req = re.get(page_url.format(page_n=page_num))
+    page_url = f"https://www.4freephotos.com/photos.php?&page={page_num}&order=latest"
+    req = re.get(page_url)
     soup = bs(req.text, 'html.parser')
     return soup
 
@@ -114,7 +114,7 @@ Color_names=list(new_colors.keys())
 #----------------- Fin creation table de couleurs
 
 def get_colors(link,nb_cluster):
-    imgfile = Image.open("image_tests/{link}".format(link=link))
+    imgfile = Image.open(f"{img_folder_path}/{link}")
     numarray = np.array(imgfile.getdata(), np.uint8)
     #print(numarray)
     clusters = KMeans(n_clusters = nb_cluster)
@@ -152,22 +152,32 @@ def get_colors(link,nb_cluster):
 
 #------------------------------Déroulement code
 
-img_list = get_n_pics(10)
-image_num=0
-for img in img_list:
-    img_title="{title}.jpg".format(title=img["title"])
-    if os.path.isfile("image_tests/{img_title}".format(img_title=img_title))==False:
-        download_to_path(img_folder_path, img["jpglink"], img_title)
-    else:
-        print("ok") 
-    img_colors=get_colors(img_title,6)
-    img_list[image_num]["colors"]=img_colors
 
+def dl_pictures(img_list):
+    image_num=0
+    for img in img_list:
+        img_title="{title}.jpg".format(title=img["title"])
+        if os.path.isfile(f"{img_folder_path}/{img_title}")==False:
+            download_to_path(img_folder_path, img["jpglink"], img_title)
+        else:
+            print("ok ",image_num)
+        img_colors=get_colors(img_title,6)
+        img_list[image_num]["colors"]=img_colors
+        image_num+=1
         
-def random_sample(n, imglist):
-    user_list = rd.sample(imglist,n)
+    return img_list
+
+#img_list = get_n_pics(100)
+#img_list = dl_pictures(img_list)
+
+
+def random_sample(imglist):
+    user_list = rd.sample(imglist,len(imglist)//5)
     return user_list
 
+# for i in img_list:
+#     a=i['height']
+#     b=i['width']
+#     print ("Pic is ", a, "x ", b," px")
 
-
-#user_choice = random_sample(15,img_list)
+user_choice = random_sample(img_list)
