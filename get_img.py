@@ -2,7 +2,8 @@ import requests as re
 import random as rd
 import os
 from bs4 import BeautifulSoup as bs
-#import time
+
+# import time
 from PIL import Image
 import numpy as np
 import math
@@ -12,8 +13,7 @@ from sklearn.cluster import KMeans
 from test_values import IMGS as img_list
 
 
-
-img_folder_path = "downloads" 
+img_folder_path = "downloads"
 url = "https://www.4freephotos.com/"
 # print(soup.prettify()) pour voir tout le code html 'proprement'
 
@@ -21,37 +21,42 @@ url = "https://www.4freephotos.com/"
 def get_page(page_num):
     page_url = f"https://www.4freephotos.com/photos.php?&page={page_num}&order=latest"
     req = re.get(page_url)
-    soup = bs(req.text, 'html.parser')
+    soup = bs(req.text, "html.parser")
     return soup
+
 
 def get_tags(link):
     req = re.get(link)
     soup = bs(req.text, "html.parser")
-    for imgtag in soup.find_all("meta", attrs={"name":"keywords"}):
-        taglist=imgtag.get("content").split(", ")
+    for imgtag in soup.find_all("meta", attrs={"name": "keywords"}):
+        taglist = imgtag.get("content").split(", ")
     return taglist
+
 
 def get_n_pics(n):
     page_num = 0
     img_list = []
-    img_list2= []
+    img_list2 = []
     while len(img_list) < n:
         page_num += 1
         soup = get_page(page_num)
         for img in soup.find_all("img"):
             if img.get("height") and img.get("width"):
-                tags=get_tags("https://www.4freephotos.com/" + img.find_parent("a")["href"])
-                #print("https://www.4freephotos.com/" + img.find_parent("a")["href"])
-                #img_list2.append(img) #<-- list of tags
-                img_list.append(jsonify(img,tags)) # list of jsonified_tags
+                tags = get_tags(
+                    "https://www.4freephotos.com/" + img.find_parent("a")["href"]
+                )
+                # print("https://www.4freephotos.com/" + img.find_parent("a")["href"])
+                # img_list2.append(img) #<-- list of tags
+                img_list.append(jsonify(img, tags))  # list of jsonified_tags
     img_list = img_list[:n]
     return img_list
 
 
-
-def jsonify(tag,keywords): #créer liste sous format json
+def jsonify(tag, keywords):  # créer liste sous format json
     jsonified_tag = {}
-    jsonified_tag["jpglink"] = "https://www.4freephotos.com/" + tag["src"] # To get full link to pictures
+    jsonified_tag["jpglink"] = (
+        "https://www.4freephotos.com/" + tag["src"]
+    )  # To get full link to pictures
     jsonified_tag["height"] = tag["height"]
     jsonified_tag["width"] = tag["width"]
     jsonified_tag["title"] = tag["alt"].replace(" ", "_")
@@ -59,10 +64,11 @@ def jsonify(tag,keywords): #créer liste sous format json
         jsonified_tag["orientation"] = "portrait"
     else:
         jsonified_tag["orientation"] = "landscape"
-    
+
     jsonified_tag["size"] = size(tag["width"])
     jsonified_tag["keywords"] = keywords
     return jsonified_tag
+
 
 def size(width):
     if width < 400:
@@ -73,124 +79,137 @@ def size(width):
         return "Large"
     else:
         return "Very Large"
+
+
 def download_to_path(path, url, name):
     r = re.get(url)
-    with open(path + "/" + name, "wb") as writer: 
-            writer.write(r.content)
+    with open(path + "/" + name, "wb") as writer:
+        writer.write(r.content)
 
-#------------------------------------------------------ recup couleurs
+
+# ------------------------------------------------------ recup couleurs
 
 basic_colors = {
-  "white": [255, 255, 255],
-  "black": [0, 0, 0],
-  "red": [255, 0, 0],
-  "green": [0, 255, 0],
-  "blue": [0, 0, 255],
-  "yellow": [255,255,0],
-  "cyan": [0,255,255],
-  "magenta": [255,0,255],
-  "gray": [128,128,128],
-  "orange": [255, 128, 0],
-  "purple": [128, 0, 255],
-  "pink": [255, 0, 128],
-  "brown": [165,42,42],
+    "white": [255, 255, 255],
+    "black": [0, 0, 0],
+    "red": [255, 0, 0],
+    "green": [0, 255, 0],
+    "blue": [0, 0, 255],
+    "yellow": [255, 255, 0],
+    "cyan": [0, 255, 255],
+    "magenta": [255, 0, 255],
+    "gray": [128, 128, 128],
+    "orange": [255, 128, 0],
+    "purple": [128, 0, 255],
+    "pink": [255, 0, 128],
+    "brown": [165, 42, 42],
 }
 
+
 def add_to_list(rgb_list, tint):
-  output = []
-  for i in rgb_list:
-    if tint == "dark":
-    # Makes sure all values are between 0 and 255.
-      output.append(max(0, min(255, i/2)))
-    if tint == "light":
-      output.append(max(0,min(255, i+70)))
-  return output
+    output = []
+    for i in rgb_list:
+        if tint == "dark":
+            # Makes sure all values are between 0 and 255.
+            output.append(max(0, min(255, i / 2)))
+        if tint == "light":
+            output.append(max(0, min(255, i + 70)))
+    return output
 
 
-new_colors={"white": [255, 255, 255], "black": [0, 0, 0]}
+new_colors = {"white": [255, 255, 255], "black": [0, 0, 0]}
 
-for color in basic_colors.keys() :
-  if color not in ["black", "white","gray"]:   
-    new_colors["light "+ color] = add_to_list(basic_colors[color], "light")
-    new_colors[color]=basic_colors[color]
-    new_colors["dark "+ color] = add_to_list(basic_colors[color], "dark")   
-#print(new_colors)
-Colors_rgb=list(new_colors.values())
-Color_names=list(new_colors.keys())
+for color in basic_colors.keys():
+    if color not in ["black", "white", "gray"]:
+        new_colors["light " + color] = add_to_list(basic_colors[color], "light")
+        new_colors[color] = basic_colors[color]
+        new_colors["dark " + color] = add_to_list(basic_colors[color], "dark")
+# print(new_colors)
+Colors_rgb = list(new_colors.values())
+Color_names = list(new_colors.keys())
 
-#for color,value in new_colors.items(): 
+# for color,value in new_colors.items():
 #  print (colr.color(f"   {color}", back=value))
-#Décommenter pour observer la palette de couleurs de la table
+# Décommenter pour observer la palette de couleurs de la table
 
-#----------------- Fin creation table de couleurs
+# ----------------- Fin creation table de couleurs
 
-def get_colors(link,nb_cluster):
+
+def get_colors(link, nb_cluster):
     imgfile = Image.open(f"{img_folder_path}/{link}")
     numarray = np.array(imgfile.getdata(), np.uint8)
-    #print(numarray)
-    clusters = KMeans(n_clusters = nb_cluster)
+    # print(numarray)
+    clusters = KMeans(n_clusters=nb_cluster)
     clusters.fit(numarray)
-    npbins = np.arange(0, nb_cluster+1)
+    npbins = np.arange(0, nb_cluster + 1)
     histogram = np.histogram(clusters.labels_, bins=npbins)
     labels = np.unique(clusters.labels_)
     barlist = plot.bar(labels, histogram[0])
     for i in range(nb_cluster):
-        barlist[i].set_color('#%02x%02x%02x' % (
-        math.ceil(clusters.cluster_centers_[i][0]), 
-        math.ceil(clusters.cluster_centers_[i][1]),
-        math.ceil(clusters.cluster_centers_[i][2])))
+        barlist[i].set_color(
+            "#%02x%02x%02x"
+            % (
+                math.ceil(clusters.cluster_centers_[i][0]),
+                math.ceil(clusters.cluster_centers_[i][1]),
+                math.ceil(clusters.cluster_centers_[i][2]),
+            )
+        )
 
     # plot.show()
-    a=0
+    a = 0
     for i in clusters.cluster_centers_:
-        b=0
+        b = 0
         for j in i:
-            clusters.cluster_centers_[a][b]=int(j)
-            b+=1
-        a+=1
-    
-    name_list=[]
+            clusters.cluster_centers_[a][b] = int(j)
+            b += 1
+        a += 1
+
+    name_list = []
     for i in clusters.cluster_centers_:
-        tmp_clr=None
-        tmp_dist=None
+        tmp_clr = None
+        tmp_dist = None
         for stand_col in Colors_rgb:
-            if tmp_dist is None or tmp_dist > math.dist(i,stand_col):
+            if tmp_dist is None or tmp_dist > math.dist(i, stand_col):
                 tmp_clr = stand_col
-                tmp_dist = math.dist(i,stand_col)
+                tmp_dist = math.dist(i, stand_col)
         name_list.append(Color_names[Colors_rgb.index(tmp_clr)])
-    return set(name_list) #set permet d'enlever les doublons
+    return set(name_list)  # set permet d'enlever les doublons
 
 
-#------------------------------Déroulement code
+# ------------------------------Déroulement code
 
 
 def dl_pictures(img_list):
-    image_num=0
+    image_num = 0
     for img in img_list:
-        img_title="{title}.jpg".format(title=img["title"])
-        if os.path.isfile(f"{img_folder_path}/{img_title}")==False:
+        img_title = "{title}.jpg".format(title=img["title"])
+        if os.path.isfile(f"{img_folder_path}/{img_title}") == False:
             download_to_path(img_folder_path, img["jpglink"], img_title)
         else:
-            print("ok ",image_num)
-        img_colors=get_colors(img_title,6)
-        img_list[image_num]["colors"]=img_colors
-        image_num+=1
-        
+            print("ok ", image_num)
+        img_colors = get_colors(img_title, 6)
+        img_list[image_num]["colors"] = img_colors
+        image_num += 1
+
     return img_list
 
-#img_list = get_n_pics(100)
-#img_list = dl_pictures(img_list)
+
+# img_list = get_n_pics(100)
+# img_list = dl_pictures(img_list)
 
 
 def random_sample(imglist):
-    user_list = rd.sample(imglist,len(imglist)//5)
+    user_list = rd.sample(imglist, len(imglist) // 5)
+    for user in user_list:
+        user["liked"] = int(rd.random() * 2)
     return user_list
 
-w=set()
+
+w = set()
 for i in img_list:
-    a=i['height']
-    b=i['width']
+    a = i["height"]
+    b = i["width"]
     w.add(b)
-    print ("Pic is", a,"x",b," px")
+    print("Pic is", a, "x", b, " px")
 
 user_choice = random_sample(img_list)
