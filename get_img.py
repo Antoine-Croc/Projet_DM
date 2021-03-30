@@ -118,10 +118,7 @@ def get_colors(link,nb_cluster):
     numarray = np.array(imgfile.getdata(), np.uint8)
     #print(numarray)
     clusters = KMeans(n_clusters = nb_cluster)
-    start = time.time()
     clusters.fit(numarray)
-    finish = time.time()
-    print(finish-start)
     npbins = np.arange(0, nb_cluster+1)
     histogram = np.histogram(clusters.labels_, bins=npbins)
     labels = np.unique(clusters.labels_)
@@ -150,7 +147,7 @@ def get_colors(link,nb_cluster):
                 tmp_clr = stand_col
                 tmp_dist = math.dist(i,stand_col)
         name_list.append(Color_names[Colors_rgb.index(tmp_clr)])
-    return set(name_list)
+    return set(name_list) #set permet d'enlever les doublons
 
 
 #------------------------------Déroulement code
@@ -171,5 +168,6 @@ def random_sample(n, imglist):
     user_list = rd.sample(imglist,n)
     return user_list
 
-user_choice = random_sample(15,img_list)
 
+
+#user_choice = random_sample(15,img_list)
