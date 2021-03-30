@@ -9,7 +9,7 @@ import math
 import matplotlib.pyplot as plot
 import colr
 from sklearn.cluster import KMeans
-#from test_values import IMGS as img_list
+from test_values import IMGS as img_list
 
 
 
@@ -59,9 +59,20 @@ def jsonify(tag,keywords): #créer liste sous format json
         jsonified_tag["orientation"] = "portrait"
     else:
         jsonified_tag["orientation"] = "landscape"
+    
+    jsonified_tag["size"] = size(tag["width"])
     jsonified_tag["keywords"] = keywords
     return jsonified_tag
 
+def size(width):
+    if width < 400:
+        return "Small"
+    elif width < 500:
+        return "Medium"
+    elif width < 650:
+        return "Large"
+    else:
+        return "Very Large"
 def download_to_path(path, url, name):
     r = re.get(url)
     with open(path + "/" + name, "wb") as writer: 
@@ -175,9 +186,11 @@ def random_sample(imglist):
     user_list = rd.sample(imglist,len(imglist)//5)
     return user_list
 
-# for i in img_list:
-#     a=i['height']
-#     b=i['width']
-#     print ("Pic is ", a, "x ", b," px")
+w=set()
+for i in img_list:
+    a=i['height']
+    b=i['width']
+    w.add(b)
+    print ("Pic is", a,"x",b," px")
 
 user_choice = random_sample(img_list)
