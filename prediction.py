@@ -5,9 +5,10 @@ from sklearn.preprocessing import LabelEncoder
 import graphviz
 import pydotplus
 from IPython.display import Image, display
-from get_img import user_choice, img_list
 from colors import full_colors, print_colors
 
+OTHER_KEYS = ["height", "width", "orientation"]
+EXPLODED_KEYS = ["colors", "keywords"]
 
 def get_unique_values(key, imglist):
     payload = set()
@@ -27,57 +28,57 @@ def drop_all_except(df, cols):
             payload = payload.drop(col, axis=1)
     return payload
 
-
-choice_df = pd.DataFrame(user_choice)
-choice_df = drop_all_except(
-    choice_df,
-    ["colors", "height", "width", "orientation", "keywords", "liked"],
-)
-results = choice_df["liked"]
-
-labels = {}
-exploded_df = {}
-other_keys = ["height", "width", "orientation"]
-exploded_keys = ["colors", "keywords"]
-
-
-for key in ["colors", "height", "width", "orientation", "keywords"]:
-    labels[key] = LabelEncoder()
-    print(key)
-    print(get_unique_values(key, img_list))
-    labels[key].fit(get_unique_values(key, img_list))
-    if key in exploded_keys:
-        exploded_df[key] = drop_all_except(choice_df, [key, "liked"]).explode(key)
-        exploded_df[key][key] = labels[key].transform(exploded_df[key][key])
-    else:
-        others_df = drop_all_except(choice_df, [*other_keys, "liked"])
-        others_df[key] = labels[key].transform(others_df[key])
-
-
-trees = {}
-for key in exploded_keys:
-    trees[key] = tree.DecisionTreeClassifier()
-    trees[key].fit(
-        exploded_df[key][key].to_frame(), exploded_df[key]["liked"].to_frame()
+def train_labels_and_trees(user_choice, all_pictures):
+    choice_df = pd.DataFrame(user_choice)
+    choice_df = drop_all_except(
+        choice_df,
+        ["colors", "height", "width", "orientation", "keywords", "liked"],
     )
+    results = choice_df["liked"]
 
-trees["others"] = tree.DecisionTreeClassifier()
-trees["others"].fit(others_df[other_keys], others_df["liked"].to_frame())
+    labels = {}
+    exploded_df = {}
+    for key in ["colors", "height", "width", "orientation", "keywords"]:
+        labels[key] = LabelEncoder()
+        labels[key].fit(get_unique_values(key, all_pictures))
+        if key in EXPLODED_KEYS:
+            exploded_df[key] = drop_all_except(choice_df, [key, "liked"]).explode(key)
+            exploded_df[key][key] = labels[key].transform(exploded_df[key][key])
+        else:
+            others_df = drop_all_except(choice_df, [*OTHER_KEYS, "liked"])
+            others_df[key] = labels[key].transform(others_df[key])
 
 
-def is_image_favorite(img, labels=labels, trees=trees):
-    img_df = pd.DataFrame(img)
-    other_df = drop_all_except(img_df, other_keys)
-    for key in other_keys:
+    trees = {}
+    for key in EXPLODED_KEYS:
+        trees[key] = tree.DecisionTreeClassifier()
+        trees[key].fit(
+            exploded_df[key][key].to_frame(), exploded_df[key]["liked"].to_frame()
+        )
+
+    trees["others"] = tree.DecisionTreeClassifier()
+    trees["others"].fit(others_df[OTHER_KEYS], others_df["liked"].to_frame())
+    return {"labels": labels, "trees":trees}
+
+
+def is_image_favorite(img, labels, trees):
+    img_df = pd.DataFrame([img])
+    other_df = drop_all_except(img_df, OTHER_KEYS)
+    for key in OTHER_KEYS:
         other_df[key] = labels[key].transform(other_df[key])
     other_prediction = trees["others"].predict(other_df)
 
     exploded_preds = {}
-    for key in exploded_keys:
+    for key in EXPLODED_KEYS:
         exploded_df = drop_all_except(img_df, [key]).explode(key)
-        exploded_df = labels[key].transform(exploded_df)
-        exploded_preds[key] = trees[key].predict(exploded_df.to_frame())
+        exploded_df = pd.DataFrame(labels[key].transform(exploded_df))
+        exploded_preds[key] = trees[key].predict(exploded_df)
 
     print("others: ", other_prediction)
     for key, pred in exploded_preds.items():
         print(f"{key}: {pred}")
+
+    color_prediction = exploded_preds["colors"].count(0) < 2
+    keywords_prediction = exploded_preds["keywords"].count(0) < len(exploded_preds["keywords"])//2
+    other_prediction = bool(other_prediction[0])
+    return color_prediction and keywords_prediction and other_prediction
