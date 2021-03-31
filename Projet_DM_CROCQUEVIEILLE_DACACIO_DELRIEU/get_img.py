@@ -11,7 +11,7 @@ from test_values import IMGS as img_list
 from colors import full_colors, print_colors
 
 
-img_folder_path = "downloads"
+img_folder_path = "image_tests"
 url = "https://www.4freephotos.com/"
 # print(soup.prettify()) pour voir tout le code html 'proprement'
 
