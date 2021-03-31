@@ -78,7 +78,7 @@ def is_image_favorite(img, labels, trees):
     for key, pred in exploded_preds.items():
         print(f"{key}: {pred}")
 
-    color_prediction = exploded_preds["colors"].count(0) < 2
-    keywords_prediction = exploded_preds["keywords"].count(0) < len(exploded_preds["keywords"])//2
+    color_prediction = list(exploded_preds["colors"]).count(0) < 2
+    keywords_prediction = list(exploded_preds["keywords"]).count(0) < len(exploded_preds["keywords"])//2
     other_prediction = bool(other_prediction[0])
     return color_prediction and keywords_prediction and other_prediction
